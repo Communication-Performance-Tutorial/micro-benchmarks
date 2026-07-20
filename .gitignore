@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Fetched benchmark sources (re-created by each build.sh)
+osu/src/
+osu/*.tar.gz
+rccl-tests/rocm-systems/
+rocshmem/rocm-systems/
+
+# Build output
+osu/build/

@@ -1,0 +1,48 @@
+# rccl-tests version 2.18.3-develop:90992fca21+ rccl-headers=22707 rccl-library=22707
+# Collective test starting: sendrecv_perf
+# nThread 1 nGpus 1 minBytes 1 maxBytes 1073741824 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0 unalign: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid 993670 on ppac-pl1-s25-40 device  0 [0000:01:00] AMD Instinct MI300A
+#  Rank  1 Group  0 Pid 993671 on ppac-pl1-s25-40 device  1 [0000:01:00] AMD Instinct MI300A
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong  
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)          
+           0             0     float     sum      -1     7.81    0.00    0.00       0     9.01    0.00    0.00    N/A
+           0             0     float     sum      -1     8.85    0.00    0.00       0     8.88    0.00    0.00    N/A
+           4             1     float     sum      -1     9.79    0.00    0.00       0     9.63    0.00    0.00    N/A
+           8             2     float     sum      -1    10.89    0.00    0.00       0    10.90    0.00    0.00    N/A
+          16             4     float     sum      -1    10.96    0.00    0.00       0    10.43    0.00    0.00    N/A
+          32             8     float     sum      -1    10.96    0.00    0.00       0    10.65    0.00    0.00    N/A
+          64            16     float     sum      -1    12.11    0.01    0.01       0    10.73    0.01    0.01    N/A
+         128            32     float     sum      -1    11.31    0.01    0.01       0    10.25    0.01    0.01    N/A
+         256            64     float     sum      -1    11.36    0.02    0.02       0    10.74    0.02    0.02    N/A
+         512           128     float     sum      -1    10.56    0.05    0.05       0    10.32    0.05    0.05    N/A
+        1024           256     float     sum      -1    11.04    0.09    0.09       0    10.66    0.10    0.10    N/A
+        2048           512     float     sum      -1    10.41    0.20    0.20       0    10.33    0.20    0.20    N/A
+        4096          1024     float     sum      -1    10.78    0.38    0.38       0    10.66    0.38    0.38    N/A
+        8192          2048     float     sum      -1    11.89    0.69    0.69       0    10.95    0.75    0.75    N/A
+       16384          4096     float     sum      -1    11.53    1.42    1.42       0    11.28    1.45    1.45    N/A
+       32768          8192     float     sum      -1    11.50    2.85    2.85       0    11.10    2.95    2.95    N/A
+       65536         16384     float     sum      -1    12.58    5.21    5.21       0    11.33    5.79    5.79    N/A
+      131072         32768     float     sum      -1    16.49    7.95    7.95       0    16.54    7.93    7.93    N/A
+      262144         65536     float     sum      -1    16.39   16.00   16.00       0    16.02   16.37   16.37    N/A
+      524288        131072     float     sum      -1    16.66   31.46   31.46       0    16.91   31.01   31.01    N/A
+     1048576        262144     float     sum      -1    23.92   43.84   43.84       0    24.14   43.44   43.44    N/A
+     2097152        524288     float     sum      -1    38.72   54.17   54.17       0    37.75   55.56   55.56    N/A
+     4194304       1048576     float     sum      -1    63.12   66.45   66.45       0    63.31   66.25   66.25    N/A
+     8388608       2097152     float     sum      -1    98.23   85.40   85.40       0    98.87   84.85   84.85    N/A
+    16777216       4194304     float     sum      -1   173.19   96.87   96.87       0   174.19   96.31   96.31    N/A
+    33554432       8388608     float     sum      -1   325.96  102.94  102.94       0   325.80  102.99  102.99    N/A
+    67108864      16777216     float     sum      -1   621.98  107.90  107.90       0   625.57  107.28  107.28    N/A
+   134217728      33554432     float     sum      -1  1215.30  110.44  110.44       0  1218.27  110.17  110.17    N/A
+   268435456      67108864     float     sum      -1  2389.63  112.33  112.33       0  2394.13  112.12  112.12    N/A
+   536870912     134217728     float     sum      -1  4743.99  113.17  113.17       0  4750.43  113.02  113.02    N/A
+  1073741824     268435456     float     sum      -1  9448.47  113.64  113.64       0  9455.66  113.56  113.56    N/A
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 34.6134 
+#
+# Collective test concluded: sendrecv_perf
+#
+
