@@ -102,9 +102,9 @@ partition mode the node is running:
 
 | Affinity mode | SPX support | Notes |
 |---|---|---|
-| `INTRA_CCD` | **Not supported** | Both ranks map to the same `ROCR_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
-| `INTER_CCD` | **Not supported** | Same reason |
-| `INTER_SOCKET` | **Supported** | Rank 0 → GPU 0, Rank 1 → GPU 1 (different physical dies) |
+| `INTRA_GCD` | **Not supported** | Both ranks map to the same `ROCR_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
+| `INTER_GCD` | **Not supported** | Same reason |
+| `INTER_SOCKET` | **Supported** | Rank 0 → GPU 0, Rank 1 → GPU 1 (different physical dies/packages) |
 
 #### CPX mode — partition `PPAC_MI300A_CPX` (24 GPUs per node)
 
@@ -127,9 +127,19 @@ Die 2 (NUMA 2, cores 48-71)  — only reachable with ≥ 7 GPUs allocated:
 | Affinity mode | GPU selection | Min GPUs to request | Collected |
 |---|---|---|---|
 | `INTRA_CCD` | `ROCR_VISIBLE_DEVICES=0,1` | 2 | **No — see note** |
-| `INTER_CCD` | `ROCR_VISIBLE_DEVICES=0,2` | 3 | Yes |
+| `INTER_GCD` | `ROCR_VISIBLE_DEVICES=0,2` | 3 | Yes |
 | `INTER_SOCKET` | `ROCR_VISIBLE_DEVICES=0,6` | 7 | **No** — cross-die bandwidth already measured in SPX mode (`sendrecv_INTER_SOCKET.dat`) |
 
+> **Naming: INTER_GCD vs INTER_SOCKET vs INTER_CCD.**
+> A physical MI300A package has 6 XCDs (GCDs), grouped in pairs under 3 CCDs;
+> a node has 4 such packages.  `INTER_GCD` crosses two GCDs **within the same
+> package** (indices 0 and 2 — different CCDs, same die); `INTER_SOCKET`
+> crosses two GCDs in **different packages** (indices 0 and 6 — different
+> dies).  This mode is named `INTER_GCD`, not `INTER_CCD`, because in CPX mode
+> no CPU pinning is applied at all (see below) — the mode name describes the
+> GPU-level relationship (same package, different GCD), not a CPU-cache
+> boundary.
+>
 > **Why INTRA_CCD is not collected:**
 > In CPX mode, GPU indices 0 and 1 are two 38-CU virtual partitions of the
 > *same physical CCD* on the same die.  They share the same HBM controller
@@ -137,10 +147,10 @@ Die 2 (NUMA 2, cores 48-71)  — only reachable with ≥ 7 GPUs allocated:
 > at all and measures intra-HBM copy bandwidth rather than interconnect
 > throughput.  This number is not useful for characterizing inter-GPU
 > communication and is therefore excluded from the benchmark suite.
-> `INTER_CCD` (same die, different CCDs) and `INTER_SOCKET` (different dies)
-> are the two meaningful data points.
+> `INTER_GCD` (same package, different CCDs) and `INTER_SOCKET` (different
+> packages) are the two meaningful data points.
 
-Run the CPX affinity sweep (INTER_CCD + INTER_SOCKET only) with:
+Run the CPX affinity sweep (INTER_GCD only — INTER_SOCKET is redundant with SPX) with:
 
 ```bash
 salloc --gres=gpu:7 -p PPAC_MI300A_CPX --exclusive -t 00:30:00
@@ -149,12 +159,13 @@ CPX_MODE=1 bash run.sh
 
 > **MI300A architecture note:**
 > Measured results show a meaningful bandwidth difference between modes:
-> INTER_CCD (~113 GB/s peak, same die) outperforms INTER_SOCKET (~84 GB/s peak,
-> cross-die) by ~35%.  The Infinity Fabric links that connect separate dies on
-> MI300A are narrower than the intra-die fabric, so cross-die transfers saturate
-> at a lower bandwidth ceiling.  Both modes share the same unified HBM address
-> space; the difference is purely in how much fabric bandwidth is available on
-> the data path between the two virtual GPU partitions.
+> INTER_GCD (~113 GB/s peak, same package) outperforms INTER_SOCKET (~84 GB/s
+> peak, cross-package) by ~35%.  The Infinity Fabric links that connect
+> separate packages on MI300A are narrower than the intra-package fabric
+> between GCDs, so cross-package transfers saturate at a lower bandwidth
+> ceiling.  Both modes share the same unified HBM address space; the
+> difference is purely in how much fabric bandwidth is available on the
+> data path between the two virtual GPU partitions.
 
 `all_reduce_perf` always uses all available GPUs on the node and is unaffected by
 this limitation.
@@ -179,13 +190,13 @@ this limitation.
 # Avg bus bandwidth    : 11.69 GB/s
 ```
 
-### Reference output (MI300A, CPX — `ppac-pl1-s25-40`, INTER_CCD and INTER_SOCKET, Jul 8 2026):
+### Reference output (MI300A, CPX — `ppac-pl1-s25-40`, INTER_GCD and INTER_SOCKET, Jul 8 2026):
 
 > INTRA_CCD is not collected — see the note in the affinity table above.
 
 ```
 ======================================================
-  CPX Affinity: INTER_CCD — Send/Recv (1B–1G)
+  CPX Affinity: INTER_GCD — Send/Recv (1B–1G)
 ======================================================
 #  Rank  0 Group  0 on ppac-pl1-s25-40 device  0 [0001:01:00] AMD Instinct MI300A
 #  Rank  1 Group  0 on ppac-pl1-s25-40 device  1 [0001:01:00] AMD Instinct MI300A
@@ -215,11 +226,12 @@ this limitation.
 # Avg bus bandwidth    : 26.22 GB/s
 ```
 
-**Key finding:** INTER_CCD peaks at **~113 GB/s** (both ranks on the same die,
-`[0001:01:00]`) while INTER_SOCKET peaks at **~84 GB/s** (ranks on separate dies,
-`[0001:01:00]` vs `[0002:01:00]`).  The ~35% bandwidth advantage for same-die
-transfers reflects that Infinity Fabric links between dies on MI300A are narrower
-than the intra-die fabric.  See the MI300A architecture note above for context.
+**Key finding:** INTER_GCD peaks at **~113 GB/s** (both ranks on the same package,
+`[0001:01:00]`) while INTER_SOCKET peaks at **~84 GB/s** (ranks on separate packages,
+`[0001:01:00]` vs `[0002:01:00]`).  The ~35% bandwidth advantage for same-package
+transfers reflects that Infinity Fabric links between packages on MI300A are narrower
+than the intra-package fabric between GCDs.  See the MI300A architecture note above
+for context.
 
 ---
 

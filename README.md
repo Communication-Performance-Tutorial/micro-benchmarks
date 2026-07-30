@@ -14,7 +14,7 @@ can data actually move between GPUs on this node?*
 
 | Suite | What it measures | Communication layer |
 |---|---|---|
-| [`osu/`](osu/) | Point-to-point latency & bandwidth (GPU buffer → GPU buffer) | GPU-Aware MPI (UCX) |
+| [`osu/`](osu/) | Point-to-point latency & bandwidth (GPU buffer → GPU buffer, and CPU host buffer → host buffer) | GPU-Aware MPI / plain MPI (UCX) |
 | [`rccl-tests/`](rccl-tests/) | Send/recv latency & bandwidth; all-reduce throughput | RCCL (ROCm Collective Communications Library) |
 | [`rocshmem/`](rocshmem/) | One-sided put/get latency & bandwidth (intra-node) | rocSHMEM IPC backend |
 
@@ -27,17 +27,23 @@ micro-benchmarks/
 ├── README.md               ← this file
 ├── set_affinity_mi300a.sh  ← per-rank CPU/GPU affinity wrapper (used by all run.sh scripts)
 ├── osu/
-│   ├── build.sh            ← downloads OSU source tarball, patches for ROCm, builds
-│   ├── run.sh              ← pt2pt latency + bandwidth with GPU (D D) buffers, 3 affinity modes
-│   └── sbatch_test.sh      ← SLURM job: build once, then run
+│   ├── build.sh                ← downloads OSU source tarball, patches for ROCm, builds
+│   ├── run.sh                  ← pt2pt latency + bandwidth with GPU (D D) buffers; SPX (INTRA_GCD+INTER_SOCKET) or CPX (INTER_GCD)
+│   ├── run_host.sh             ← pt2pt latency + bandwidth with CPU host (H H) buffers, 3 affinity modes
+│   ├── sbatch_test.sh          ← SLURM job (SPX): build once, then run the INTRA_GCD + INTER_SOCKET sweep
+│   ├── sbatch_cpx_test.sh      ← SLURM job (CPX): build once, then run the INTER_GCD sweep
+│   └── sbatch_host_test.sh     ← SLURM job: build once, then run run_host.sh
 ├── rccl-tests/
 │   ├── build.sh            ← sparse-checkouts rccl-tests from ROCm/rocm-systems, builds
 │   ├── run.sh              ← sendrecv latency/bandwidth + all-reduce throughput, 3 affinity modes
 │   └── sbatch_test.sh      ← SLURM job: build once, then run
 └── rocshmem/
-    ├── build.sh            ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
-    ├── run.sh              ← ping-pong latency + flood put/get bandwidth, 3 affinity modes
-    └── sbatch_test.sh      ← SLURM job: build once, then run
+    ├── build.sh                      ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
+    ├── run.sh                        ← ping-pong latency + flood put/get bandwidth, 3 affinity modes
+    ├── run_wg_saturation.sh          ← WG-count (concurrency) sweep for WG Put/Get; SPX (INTER_SOCKET) or CPX (INTER_GCD)
+    ├── sbatch_test.sh                ← SLURM job: build once, then run run.sh
+    ├── sbatch_wg_saturation.sh       ← SLURM job (SPX): build once, then run the INTER_SOCKET sweep
+    └── sbatch_wg_saturation_cpx.sh   ← SLURM job (CPX): build once, then run the INTER_GCD sweep
 ```
 
 Each sub-directory is self-contained: `build.sh` fetches its own sources, and
@@ -70,9 +76,10 @@ tail -f osu/test_<jobid>.log
 
 ## Process affinity sweep
 
-Each `run.sh` script runs its benchmarks **three times**, once per affinity mode, by
-passing `set_affinity_mi300a.sh` to `mpirun` as a per-rank launcher.  The three modes
-expose different levels of the MI300A memory hierarchy:
+Each `run.sh` script runs its benchmarks **three times** by default (SPX mode), once
+per affinity mode, by passing `set_affinity_mi300a.sh` to `mpirun` as a per-rank
+launcher.  The three SPX modes expose different levels of the MI300A memory
+hierarchy:
 
 | Mode | CPU layout | GPU layout | What it isolates |
 |---|---|---|---|
@@ -82,26 +89,32 @@ expose different levels of the MI300A memory hierarchy:
 
 ### MI300A topology recap
 
-The MI300A is an APU with CPU cores and GPU Compute Dies (GCDs) integrated on one
-package.  The relevant hierarchy for these benchmarks is:
+Each MI300A is an APU package with 24 CPU cores (3 CCDs) and one GPU (6 GCDs/XCDs,
+228 CUs total, presented as a single unified device in SPX mode).  A node has **4
+separate MI300A packages**, each connected to every other package directly via
+Infinity Fabric (xGMI) — a full mesh, not a hierarchy within one package.  The
+relevant topology for these benchmarks is:
 
 ```
-Package
-├── GPU die 0  (GPU 0)  ←  cores  0-23
+Node (4 × MI300A packages, all-to-all Infinity Fabric mesh)
+├── Package 0  (GPU 0)  ←  cores  0-23
 │   ├── CCD 0: cores  0- 7   (shared L3)
 │   ├── CCD 1: cores  8-15   (shared L3)
 │   └── CCD 2: cores 16-23   (shared L3)
-├── GPU die 1  (GPU 1)  ←  cores 24-47
+├── Package 1  (GPU 1)  ←  cores 24-47
 │   └── ...
-├── GPU die 2  (GPU 2)  ←  cores 48-71
+├── Package 2  (GPU 2)  ←  cores 48-71
 │   └── ...
-└── GPU die 3  (GPU 3)  ←  cores 72-95
+└── Package 3  (GPU 3)  ←  cores 72-95
     └── ...
 ```
 
 `INTRA_CCD` and `INTER_CCD` both keep both ranks on **GPU 0**, so the GPU data path
 is identical — only the CPU cache topology changes.  `INTER_SOCKET` is the "real"
-two-GPU case where data must cross the Infinity Fabric die-to-die link.
+two-GPU case where data must cross the Infinity Fabric **package-to-package** link
+— genuinely different from crossing GCDs *within* one package (only possible via
+CPX-mode partitioning; see `rccl-tests/README.md` and `rocshmem/README.md` for
+CPX-mode `INTER_GCD` tests that exercise that intra-package path).
 
 ### Measured results (OSU latency + bandwidth, ppac-pl1-s24-26)
 
