@@ -1,9 +1,6 @@
 # RCCL Tests — Collective Communication Benchmarks
 
-[RCCL](https://github.com/ROCm/rccl) (ROCm Collective Communications Library) is
-AMD's GPU-optimized implementation of the NCCL API.  It provides collective operations
-(all-reduce, broadcast, send/recv, etc.) that exploit Infinity Fabric / xGMI links
-between GPU dies for transfers that bypass the CPU entirely.
+[RCCL](https://github.com/ROCm/rccl) (ROCm Collective Communications Library) is AMD's GPU-optimized implementation of the NCCL API.  It provides collective operations (all-reduce, broadcast, send/recv, etc.) that exploit Infinity Fabric / xGMI links between GPU dies for transfers that bypass the CPU entirely.
 
 This directory builds and runs two tests:
 
@@ -12,8 +9,7 @@ This directory builds and runs two tests:
 | `sendrecv_perf` | Bidirectional point-to-point bandwidth and latency (2 GPUs) |
 | `all_reduce_perf` | All-reduce throughput across all available GPUs |
 
-Together these answer: *how fast can RCCL move data between GPUs*, complementing the
-MPI-based measurements in `osu/`.
+Together these answer: *how fast can RCCL move data between GPUs*, complementing the MPI-based measurements in `osu/`.
 
 ---
 
@@ -46,8 +42,7 @@ rccl-tests/
 module load rocm openmpi
 ```
 
-RCCL is bundled with ROCm (`$ROCM_PATH/lib/librccl.so`).  OpenMPI is required to
-launch multi-rank jobs.
+RCCL is bundled with ROCm (`$ROCM_PATH/lib/librccl.so`).  OpenMPI is required to launch multi-rank jobs.
 
 ---
 
@@ -57,11 +52,7 @@ launch multi-rank jobs.
 bash build.sh
 ```
 
-The script does a sparse git checkout of only `projects/rccl-tests` from the
-`ROCm/rocm-systems` monorepo (avoids cloning the full multi-GB repository), detects
-the local GPU architecture, applies a backward-compatibility patch for the
-`NCCL_CTA_POLICY_ZERO` symbol missing in ROCm 7.2.4, and builds with `GPU_TARGETS`
-set to the detected arch (`gfx942` on MI300A).  Build takes about 1 minute.
+The script does a sparse git checkout of only `projects/rccl-tests` from the `ROCm/rocm-systems` monorepo (avoids cloning the full multi-GB repository), detects the local GPU architecture, applies a backward-compatibility patch for the `NCCL_CTA_POLICY_ZERO` symbol missing in ROCm 7.2.4, and builds with `GPU_TARGETS` set to the detected arch (`gfx942` on MI300A).  Build takes about 1 minute.
 
 ---
 
@@ -94,23 +85,19 @@ sbatch sbatch_test.sh
 
 ### Affinity sweep and device partition mode
 
-`sendrecv_perf` is a point-to-point test that requires **2 ranks each with a distinct
-GPU**.  This constrains which affinity modes are valid depending on the MI300A device
-partition mode the node is running:
+`sendrecv_perf` is a point-to-point test that requires **2 ranks each with a distinct GPU**.  This constrains which affinity modes are valid depending on the MI300A device partition mode the node is running:
 
 #### SPX mode (default — 4 GPUs per node)
 
 | Affinity mode | SPX support | Notes |
 |---|---|---|
-| `INTRA_GCD` | **Not supported** | Both ranks map to the same `ROCR_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
-| `INTER_GCD` | **Not supported** | Same reason |
+| `INTRA_XCD` | **Not supported** | Both ranks map to the same `ROCR_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
+| `INTER_XCD` | **Not supported** | Same reason |
 | `INTER_SOCKET` | **Supported** | Rank 0 → GPU 0, Rank 1 → GPU 1 (different physical dies/packages) |
 
 #### CPX mode — partition `PPAC_MI300A_CPX` (24 GPUs per node)
 
-In CPX mode the physical MI300A presents **24 virtual GPU devices** — 6 per die
-(2 per CCD), each with 38 compute units (1/6 of a full GCD).  SLURM remaps the
-allocated GPU set to local indices 0…N-1 via `ROCR_VISIBLE_DEVICES`.
+In CPX mode the physical MI300A presents **24 virtual GPU devices** — 6 per die (2 per CCD), each with 38 compute units (1/6 of a full XCD).  SLURM remaps the allocated GPU set to local indices 0…N-1 via `ROCR_VISIBLE_DEVICES`.
 
 GPU index layout within a single-node CPX allocation:
 
@@ -127,17 +114,17 @@ Die 2 (NUMA 2, cores 48-71)  — only reachable with ≥ 7 GPUs allocated:
 | Affinity mode | GPU selection | Min GPUs to request | Collected |
 |---|---|---|---|
 | `INTRA_CCD` | `ROCR_VISIBLE_DEVICES=0,1` | 2 | **No — see note** |
-| `INTER_GCD` | `ROCR_VISIBLE_DEVICES=0,2` | 3 | Yes |
+| `INTER_XCD` | `ROCR_VISIBLE_DEVICES=0,2` | 3 | Yes |
 | `INTER_SOCKET` | `ROCR_VISIBLE_DEVICES=0,6` | 7 | **No** — cross-die bandwidth already measured in SPX mode (`sendrecv_INTER_SOCKET.dat`) |
 
-> **Naming: INTER_GCD vs INTER_SOCKET vs INTER_CCD.**
-> A physical MI300A package has 6 XCDs (GCDs), grouped in pairs under 3 CCDs;
-> a node has 4 such packages.  `INTER_GCD` crosses two GCDs **within the same
+> **Naming: INTER_XCD vs INTER_SOCKET vs INTER_CCD.**
+> A physical MI300A package has 6 XCDs, grouped in pairs under 3 CCDs;
+> a node has 4 such packages.  `INTER_XCD` crosses two XCDs **within the same
 > package** (indices 0 and 2 — different CCDs, same die); `INTER_SOCKET`
-> crosses two GCDs in **different packages** (indices 0 and 6 — different
-> dies).  This mode is named `INTER_GCD`, not `INTER_CCD`, because in CPX mode
+> crosses two XCDs in **different packages** (indices 0 and 6 — different
+> dies).  This mode is named `INTER_XCD`, not `INTER_CCD`, because in CPX mode
 > no CPU pinning is applied at all (see below) — the mode name describes the
-> GPU-level relationship (same package, different GCD), not a CPU-cache
+> GPU-level relationship (same package, different XCD), not a CPU-cache
 > boundary.
 >
 > **Why INTRA_CCD is not collected:**
@@ -147,10 +134,10 @@ Die 2 (NUMA 2, cores 48-71)  — only reachable with ≥ 7 GPUs allocated:
 > at all and measures intra-HBM copy bandwidth rather than interconnect
 > throughput.  This number is not useful for characterizing inter-GPU
 > communication and is therefore excluded from the benchmark suite.
-> `INTER_GCD` (same package, different CCDs) and `INTER_SOCKET` (different
+> `INTER_XCD` (same package, different CCDs) and `INTER_SOCKET` (different
 > packages) are the two meaningful data points.
 
-Run the CPX affinity sweep (INTER_GCD only — INTER_SOCKET is redundant with SPX) with:
+Run the CPX affinity sweep (INTER_XCD only — INTER_SOCKET is redundant with SPX) with:
 
 ```bash
 salloc --gres=gpu:7 -p PPAC_MI300A_CPX --exclusive -t 00:30:00
@@ -159,16 +146,15 @@ CPX_MODE=1 bash run.sh
 
 > **MI300A architecture note:**
 > Measured results show a meaningful bandwidth difference between modes:
-> INTER_GCD (~113 GB/s peak, same package) outperforms INTER_SOCKET (~84 GB/s
+> INTER_XCD (~113 GB/s peak, same package) outperforms INTER_SOCKET (~84 GB/s
 > peak, cross-package) by ~35%.  The Infinity Fabric links that connect
 > separate packages on MI300A are narrower than the intra-package fabric
-> between GCDs, so cross-package transfers saturate at a lower bandwidth
+> between XCDs, so cross-package transfers saturate at a lower bandwidth
 > ceiling.  Both modes share the same unified HBM address space; the
 > difference is purely in how much fabric bandwidth is available on the
 > data path between the two virtual GPU partitions.
 
-`all_reduce_perf` always uses all available GPUs on the node and is unaffected by
-this limitation.
+`all_reduce_perf` always uses all available GPUs on the node and is unaffected by this limitation.
 
 ### Reference output (MI300A, SPX — 4 GPUs, INTER_SOCKET):
 
@@ -190,13 +176,13 @@ this limitation.
 # Avg bus bandwidth    : 11.69 GB/s
 ```
 
-### Reference output (MI300A, CPX — `ppac-pl1-s25-40`, INTER_GCD and INTER_SOCKET, Jul 8 2026):
+### Reference output (MI300A, CPX — `ppac-pl1-s25-40`, INTER_XCD and INTER_SOCKET, Jul 8 2026):
 
 > INTRA_CCD is not collected — see the note in the affinity table above.
 
 ```
 ======================================================
-  CPX Affinity: INTER_GCD — Send/Recv (1B–1G)
+  CPX Affinity: INTER_XCD — Send/Recv (1B–1G)
 ======================================================
 #  Rank  0 Group  0 on ppac-pl1-s25-40 device  0 [0001:01:00] AMD Instinct MI300A
 #  Rank  1 Group  0 on ppac-pl1-s25-40 device  1 [0001:01:00] AMD Instinct MI300A
@@ -226,12 +212,7 @@ this limitation.
 # Avg bus bandwidth    : 26.22 GB/s
 ```
 
-**Key finding:** INTER_GCD peaks at **~113 GB/s** (both ranks on the same package,
-`[0001:01:00]`) while INTER_SOCKET peaks at **~84 GB/s** (ranks on separate packages,
-`[0001:01:00]` vs `[0002:01:00]`).  The ~35% bandwidth advantage for same-package
-transfers reflects that Infinity Fabric links between packages on MI300A are narrower
-than the intra-package fabric between GCDs.  See the MI300A architecture note above
-for context.
+**Key finding:** INTER_XCD peaks at **~113 GB/s** (both ranks on the same package, `[0001:01:00]`) while INTER_SOCKET peaks at **~84 GB/s** (ranks on separate packages, `[0001:01:00]` vs `[0002:01:00]`).  The ~35% bandwidth advantage for same-package transfers reflects that Infinity Fabric links between packages on MI300A are narrower than the intra-package fabric between XCDs.  See the MI300A architecture note above for context.
 
 ---
 
@@ -242,31 +223,22 @@ for context.
 RCCL reports two bandwidth columns:
 
 - **`algbw`** — total data size ÷ time; what the application sees.
-- **`busbw`** — normalized for the number of GPUs in the collective; measures how
-  efficiently the interconnect is used.  For an all-reduce across *N* GPUs, `busbw =
-  algbw × 2(N−1)/N`.
+- **`busbw`** — normalized for the number of GPUs in the collective; measures how efficiently the interconnect is used.  For an all-reduce across *N* GPUs, `busbw = algbw × 2(N−1)/N`.
 
-When comparing across GPU counts, `busbw` is the fair metric — it removes the
-inherent algorithmic scaling factor.
+When comparing across GPU counts, `busbw` is the fair metric — it removes the inherent algorithmic scaling factor.
 
 ### RCCL vs GPU-Aware MPI
 
-Both RCCL and GPU-Aware MPI (as in `osu/`) can send GPU buffers without host copies.
-The difference is in the path:
+Both RCCL and GPU-Aware MPI (as in `osu/`) can send GPU buffers without host copies. The difference is in the path:
 
-- **GPU-Aware MPI** routes through the UCX transport layer, which may use host memory
-  internally depending on the provider.
-- **RCCL** uses ROCm IPC handles and Infinity Fabric directly, bypassing the MPI stack
-  entirely.  On MI300A this gives RCCL a significant bandwidth advantage for large
-  collectives.
+- **GPU-Aware MPI** routes through the UCX transport layer, which may use host memory internally depending on the provider.
+- **RCCL** uses ROCm IPC handles and Infinity Fabric directly, bypassing the MPI stack entirely.  On MI300A this gives RCCL a significant bandwidth advantage for large collectives.
 
-This is why `CG-GPU/` exposes an `rccl` communication variant alongside the standard
-GPU-Aware MPI variants.
+This is why `CG-GPU/` exposes an `rccl` communication variant alongside the standard GPU-Aware MPI variants.
 
 ### Sparse checkout
 
-`build.sh` uses `git sparse-checkout` so only the `projects/rccl-tests` subtree is
-fetched from the multi-GB `ROCm/rocm-systems` monorepo:
+`build.sh` uses `git sparse-checkout` so only the `projects/rccl-tests` subtree is fetched from the multi-GB `ROCm/rocm-systems` monorepo:
 
 ```bash
 git clone --filter=blob:none --no-checkout https://github.com/ROCm/rocm-systems.git

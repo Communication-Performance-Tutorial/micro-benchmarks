@@ -25,5 +25,5 @@ fi
 
 echo ""
 echo "=== Run: WG-count saturation sweep (INTER_SOCKET, SPX mode) ==="
-echo "    For INTER_GCD (same-package), submit sbatch_wg_saturation_cpx.sh instead."
+echo "    For INTER_XCD (same-package), submit sbatch_wg_saturation_cpx.sh instead."
 bash "$SCRIPT_DIR/run_wg_saturation.sh"

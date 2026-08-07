@@ -20,5 +20,5 @@ if [[ ! -x "$BINARY" ]]; then
     bash "$SCRIPT_DIR/build.sh"
 fi
 
-echo "=== CPX sendrecv: INTER_GCD (INTER_SOCKET already covered by SPX) ==="
+echo "=== CPX sendrecv: INTER_XCD (INTER_SOCKET already covered by SPX) ==="
 CPX_MODE=1 bash "$SCRIPT_DIR/run.sh"

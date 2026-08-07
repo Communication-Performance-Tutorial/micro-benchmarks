@@ -21,5 +21,5 @@ if [[ ! -x "$BINARY" ]]; then
 fi
 
 echo ""
-echo "=== Run: CPX affinity sweep (INTER_GCD) ==="
+echo "=== Run: CPX affinity sweep (INTER_XCD) ==="
 CPX_MODE=1 bash "$SCRIPT_DIR/run.sh"

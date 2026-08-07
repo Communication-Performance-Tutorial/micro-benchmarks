@@ -20,5 +20,5 @@ if [[ ! -x "$BINARY" ]]; then
     bash "$SCRIPT_DIR/build.sh"
 fi
 
-echo "=== Run: WG-count saturation sweep (INTER_GCD, CPX mode) ==="
+echo "=== Run: WG-count saturation sweep (INTER_XCD, CPX mode) ==="
 CPX_MODE=1 bash "$SCRIPT_DIR/run_wg_saturation.sh"

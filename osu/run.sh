@@ -11,24 +11,24 @@
 #       INTER_CCD   — ranks on different CCDs of the same die, both ranks → GPU 0
 #       INTER_SOCKET— ranks on different GPU dies (different packages)
 #     INTRA_CCD and INTER_CCD both route both ranks to GPU 0 — i.e. both are
-#     INTRA_GCD at the GPU level (same GCD), differing only in CPU L3 locality.
+#     INTRA_XCD at the GPU level (same XCD), differing only in CPU L3 locality.
 #     INTER_SOCKET is genuinely cross-package.
 #
 #   CPX mode (CPX_MODE=1, requires a PPAC_MI300A_CPX allocation):
-#     ROCR_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different GCD
-#     (XCD) partitions on the SAME physical die — genuine INTER_GCD traffic
-#     (same package, different GCD), matching ../rccl-tests/run.sh's CPX mapping.
+#     ROCR_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different XCD
+#     partitions on the SAME physical die — genuine INTER_XCD traffic
+#     (same package, different XCD), matching ../rccl-tests/run.sh's CPX mapping.
 #     No CPU pinning is applied: GPU bandwidth here is governed entirely by
 #     ROCR_VISIBLE_DEVICES, and skipping taskset avoids cpuset issues on shared
 #     CPX allocations.
 #
-# ── Naming: INTRA_GCD / INTER_GCD / INTER_SOCKET ────────────────────────────
-# A physical MI300A package contains 6 GCDs (XCDs), grouped in pairs under 3
-# CCDs; a node has 4 such packages. INTRA_GCD = both ranks on the same GCD.
-# INTER_GCD = different GCDs WITHIN the same package (CPX mode only — SPX mode
+# ── Naming: INTRA_XCD / INTER_XCD / INTER_SOCKET ────────────────────────────
+# A physical MI300A package contains 6 XCDs, grouped in pairs under 3
+# CCDs; a node has 4 such packages. INTRA_XCD = both ranks on the same XCD.
+# INTER_XCD = different XCDs WITHIN the same package (CPX mode only — SPX mode
 # cannot express this). INTER_SOCKET = different packages entirely. The
 # INTRA_CCD/INTER_CCD env-var names (inherited from set_affinity_mi300a.sh)
-# describe CPU pinning only; at the GPU level both are INTRA_GCD, which is why
+# describe CPU pinning only; at the GPU level both are INTRA_XCD, which is why
 # both are grouped under that heading in the README rather than being treated
 # as a 3-way GPU-topology sweep on their own.
 #
@@ -38,7 +38,7 @@
 #
 # Result files:
 #   SPX (default): osu_{latency,bw}_{INTRA_CCD,INTER_CCD,INTER_SOCKET}_{SDMA,BLIT}.dat
-#   CPX (CPX_MODE=1): osu_{latency,bw}_INTER_GCD_{SDMA,BLIT}.dat
+#   CPX (CPX_MODE=1): osu_{latency,bw}_INTER_XCD_{SDMA,BLIT}.dat
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 BIN="$SCRIPT_DIR/build/libexec/osu-micro-benchmarks/mpi/pt2pt"
@@ -53,33 +53,33 @@ mkdir -p "$RESULTS"
 MPIRUN="mpirun -n 2 -mca pml ucx --bind-to none"
 
 if [ -n "${CPX_MODE}" ]; then
-    # ── CPX mode: genuine INTER_GCD (same package, different GCD) ───────────
+    # ── CPX mode: genuine INTER_XCD (same package, different XCD) ───────────
     for engine in SDMA BLIT; do
         sdma_val=$([ "$engine" = "SDMA" ] && echo 1 || echo 0)
 
         echo "======================================================"
-        echo "  CPX Affinity: INTER_GCD  |  Copy engine: ${engine} (HSA_ENABLE_SDMA=${sdma_val})"
+        echo "  CPX Affinity: INTER_XCD  |  Copy engine: ${engine} (HSA_ENABLE_SDMA=${sdma_val})"
         echo "======================================================"
 
         echo "--- OSU Latency (GPU buffers) ---"
         eval "HSA_ENABLE_SDMA=${sdma_val} ROCR_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_latency\" D D" \
-            | tee "${RESULTS}/osu_latency_INTER_GCD_${engine}.dat"
+            | tee "${RESULTS}/osu_latency_INTER_XCD_${engine}.dat"
 
         echo ""
         echo "--- OSU Bandwidth (GPU buffers, up to 1 GiB) ---"
         eval "HSA_ENABLE_SDMA=${sdma_val} ROCR_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_bw\" -m $((1024*1024*1024)) D D" \
-            | tee "${RESULTS}/osu_bw_INTER_GCD_${engine}.dat"
+            | tee "${RESULTS}/osu_bw_INTER_XCD_${engine}.dat"
 
         echo ""
     done
 else
-    # ── SPX mode (default): INTRA_GCD (2 CPU sub-variants) + INTER_SOCKET ───
+    # ── SPX mode (default): INTRA_XCD (2 CPU sub-variants) + INTER_SOCKET ───
     for mode in INTRA_CCD INTER_CCD INTER_SOCKET; do
         for engine in SDMA BLIT; do
             # HSA_ENABLE_SDMA=1 → SDMA engine (default); =0 → blit kernels
             sdma_val=$([ "$engine" = "SDMA" ] && echo 1 || echo 0)
 
-            gpu_label="INTRA_GCD"
+            gpu_label="INTRA_XCD"
             [ "$mode" = "INTER_SOCKET" ] && gpu_label="INTER_SOCKET"
 
             echo "======================================================"
@@ -99,7 +99,7 @@ else
         done
     done
 
-    echo "  NOTE: INTER_GCD requires a CPX-mode allocation."
+    echo "  NOTE: INTER_XCD requires a CPX-mode allocation."
     echo "        Run with CPX_MODE=1 on a PPAC_MI300A_CPX allocation. See README.md."
     echo ""
 fi

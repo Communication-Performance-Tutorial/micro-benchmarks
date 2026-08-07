@@ -13,12 +13,12 @@
 #     Node presents 24 GPUs (6 per physical die, 2 per CCD).  All three affinity
 #     modes can be tested by selecting GPU pairs with ROCR_VISIBLE_DEVICES:
 #       INTRA_CCD    — skipped (same CCD/HBM, no Infinity Fabric path)
-#       INTER_GCD    — local indices 0,2  (diff CCD, same die/package)  ← collected
+#       INTER_XCD    — local indices 0,2  (diff CCD, same die/package)  ← collected
 #       INTER_SOCKET — skipped (cross-die already covered by SPX sendrecv_INTER_SOCKET.dat)
 #
-#     Named INTER_GCD (not INTER_CCD) because in CPX mode this is purely a GPU
+#     Named INTER_XCD (not INTER_CCD) because in CPX mode this is purely a GPU
 #     partition selection (no CPU pinning is applied — see below): indices 0
-#     and 2 are two different GCDs (XCD-partitions) on the SAME physical
+#     and 2 are two different XCD-partitions on the SAME physical
 #     MI300A package, as distinct from INTER_SOCKET which crosses packages.
 #
 #     CPU pinning is not used in CPX mode: RCCL bandwidth on MI300A depends
@@ -56,7 +56,7 @@ if [ -n "${CPX_MODE}" ]; then
 
     declare -A CPX_GPUS
     CPX_GPUS[INTRA_CCD]="0,1"
-    CPX_GPUS[INTER_GCD]="0,2"
+    CPX_GPUS[INTER_XCD]="0,2"
     CPX_GPUS[INTER_SOCKET]="0,6"
 
     # INTRA_CCD (indices 0,1) is intentionally skipped: both virtual GPUs share the
@@ -65,12 +65,12 @@ if [ -n "${CPX_MODE}" ]; then
     #
     # INTER_SOCKET is intentionally skipped: cross-die bandwidth is already
     # measured in SPX mode (sendrecv_INTER_SOCKET.dat) with full GPU devices.
-    # CPX mode adds only the INTER_GCD data point (same package, different GCD).
+    # CPX mode adds only the INTER_XCD data point (same package, different XCD).
     #
     # CPU pinning is omitted: RCCL bandwidth on MI300A is determined entirely by
     # ROCR_VISIBLE_DEVICES (which GPU pair each rank uses), not by which CPU core
     # the rank runs on.  Skipping taskset avoids cpuset issues on mixed allocations.
-    for MODE in INTER_GCD; do
+    for MODE in INTER_XCD; do
         echo "======================================================"
         echo "  CPX Affinity: ${MODE} — Send/Recv (1B–1G)"
         echo "======================================================"
@@ -104,7 +104,7 @@ else
         | tee "${RESULTS}/sendrecv_INTER_SOCKET.dat"
     echo ""
 
-    echo "  NOTE: INTRA_CCD and INTER_GCD sendrecv require CPX-mode nodes."
+    echo "  NOTE: INTRA_CCD and INTER_XCD sendrecv require CPX-mode nodes."
     echo "        Run with CPX_MODE=1 on a PPAC_MI300A_CPX allocation. See README.md."
     echo ""
 fi

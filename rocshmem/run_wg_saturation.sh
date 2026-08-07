@@ -18,20 +18,20 @@
 #     this is genuinely INTER_SOCKET traffic (crossing packages).
 #
 #   CPX mode (CPX_MODE=1, requires a PPAC_MI300A_CPX allocation):
-#     ROCR_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different GCD
-#     (XCD) partitions on the SAME physical die -- see the naming note below.
-#     This is genuinely INTER_GCD traffic (same package, different GCD).
+#     ROCR_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different XCD
+#     partitions on the SAME physical die -- see the naming note below.
+#     This is genuinely INTER_XCD traffic (same package, different XCD).
 #
-# ── Naming: INTER_GCD vs INTER_SOCKET ───────────────────────────────────────
-# A physical MI300A package contains 6 GCDs (XCDs), grouped in pairs under
-# 3 CCDs; a node has 4 such packages. INTER_GCD crosses two GCDs WITHIN THE
+# ── Naming: INTER_XCD vs INTER_SOCKET ───────────────────────────────────────
+# A physical MI300A package contains 6 XCDs, grouped in pairs under
+# 3 CCDs; a node has 4 such packages. INTER_XCD crosses two XCDs WITHIN THE
 # SAME package (CPX indices 0 and 2 -- different CCDs, same die, matching
-# ../rccl-tests/run.sh's CPX mapping). INTER_SOCKET crosses two GCDs in
+# ../rccl-tests/run.sh's CPX mapping). INTER_SOCKET crosses two XCDs in
 # DIFFERENT packages (SPX-mode GPU 0 vs GPU 1). These are genuinely different
 # hops on the Infinity Fabric, not just different CPU pinning -- an earlier
-# version of this script mistakenly treated "INTER_GCD" as just a CPU-pinning
+# version of this script mistakenly treated "INTER_XCD" as just a CPU-pinning
 # variant of the same GPU0<->GPU1 (cross-package) path; that was wrong. Only
-# CPX mode can produce true INTER_GCD traffic with this test binary, because
+# CPX mode can produce true INTER_XCD traffic with this test binary, because
 # rocSHMEM's hardcoded hipSetDevice(rank) always targets whichever devices
 # ROCR_VISIBLE_DEVICES makes visible as indices 0 and 1.
 #
@@ -58,9 +58,9 @@
 #
 # ── CPU pinning ──────────────────────────────────────────────────────────
 # INTER_SOCKET (SPX) uses the same CPU cores as run.sh's INTER_SOCKET mode
-# (0, 24). INTER_GCD (CPX) applies NO CPU pinning, matching
+# (0, 24). INTER_XCD (CPX) applies NO CPU pinning, matching
 # ../rccl-tests/run.sh's CPX approach: bandwidth is determined entirely by
-# ROCR_VISIBLE_DEVICES (which GCD pair is used), and skipping taskset avoids
+# ROCR_VISIBLE_DEVICES (which XCD pair is used), and skipping taskset avoids
 # cpuset issues on mixed/shared CPX allocations. Do NOT restrict
 # ROCR_VISIBLE_DEVICES to fewer than 2 devices -- rocSHMEM's hipSetDevice(1)
 # in rank 1 requires at least 2 visible devices.
@@ -189,29 +189,29 @@ run_wg_sweep() {
 }
 
 if [ -n "${CPX_MODE}" ]; then
-    # ── INTER_GCD sweep (CPX mode): same package, different GCD ────────────
+    # ── INTER_XCD sweep (CPX mode): same package, different XCD ────────────
     # Indices 0,2 match ../rccl-tests/run.sh's CPX mapping: different CCDs,
     # same physical die. No CPU pinning (see header note).
     export ROCR_VISIBLE_DEVICES=0,2
 
     CU_COUNT=$(detect_cu_count 38)   # MI300A fallback: 1 XCD partition = 38 CUs
-    echo "Detected CPX GCD partition CU count: ${CU_COUNT}"
+    echo "Detected CPX XCD partition CU count: ${CU_COUNT}"
     echo ""
 
     MAX_SIZE=$(floor_pow2 $(( HEAP_BUDGET / (2 * CU_COUNT) )))
-    run_wg_sweep INTER_GCD "$CU_COUNT" "$MAX_SIZE" "$CU_COUNT"
+    run_wg_sweep INTER_XCD "$CU_COUNT" "$MAX_SIZE" "$CU_COUNT"
 else
     # ── INTER_SOCKET sweep (SPX mode, default): different package ──────────
     unset ROCR_VISIBLE_DEVICES
 
     CU_COUNT=$(detect_cu_count 228)   # MI300A fallback: full die = 6 XCDs x 38 CUs
-    echo "Detected SPX GCD (full die) CU count: ${CU_COUNT}"
+    echo "Detected SPX XCD (full die) CU count: ${CU_COUNT}"
     echo ""
 
     MAX_SIZE=$(floor_pow2 $(( HEAP_BUDGET / (2 * CU_COUNT) )))
     run_wg_sweep INTER_SOCKET "$CU_COUNT" "$MAX_SIZE" "$CU_COUNT" 0 24
 
-    echo "  NOTE: INTER_GCD WG-saturation requires a CPX-mode allocation."
+    echo "  NOTE: INTER_XCD WG-saturation requires a CPX-mode allocation."
     echo "        Run with CPX_MODE=1 on a PPAC_MI300A_CPX allocation. See README.md."
     echo ""
 fi
