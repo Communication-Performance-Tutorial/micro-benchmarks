@@ -11,8 +11,9 @@ plotting-scripts/
 ├── README.md               ← this file
 ├── requirements.txt         ← matplotlib, numpy
 ├── common_style.py          ← shared styling + .dat file parsers (not run directly)
-├── osu_ccd_plot.py          ← OSU pt2pt: INTRA_CCD / INTER_CCD / INTER_SOCKET sweep
-├── osu_xcd_plot.py          ← OSU pt2pt: INTER_XCD (CPX mode) sweep
+├── osu_ccd_plot.py          ← OSU pt2pt: INTRA_CCD / INTER_CCD / INTER_SOCKET sweep (GPU buffers, D D)
+├── osu_xcd_plot.py          ← OSU pt2pt: INTER_XCD (CPX mode) sweep (GPU buffers, D D)
+├── osu_host_plot.py         ← OSU pt2pt: CPU affinity sweep (CPU/host buffers, H H)
 ├── rccl_sendrecv_plot.py    ← RCCL sendrecv_perf: INTER_SOCKET vs. INTER_XCD (CPX)
 ├── rccl_allreduce_plot.py   ← RCCL all_reduce_perf: latency + bus bandwidth
 ├── rocshmem_plot.py         ← rocSHMEM: Put vs. Get, latency + bandwidth
@@ -32,6 +33,7 @@ Run any script from this directory with no arguments — it reads from the neigh
 ```bash
 python osu_ccd_plot.py
 python osu_xcd_plot.py
+python osu_host_plot.py
 python rccl_sendrecv_plot.py
 python rccl_allreduce_plot.py
 python rocshmem_plot.py
@@ -59,6 +61,14 @@ Same file format, but targets the CPX-mode `INTER_XCD` sweep. Since CPX mode app
 
 ```bash
 python osu_xcd_plot.py --modes INTER_XCD INTER_SOCKET --engines SDMA
+```
+
+### `osu_host_plot.py`
+
+Reads `osu_latency_H_<mode>.dat` / `osu_bw_H_<mode>.dat` from `osu/results/` (produced by `osu/run_host.sh`) — the pure CPU-buffer (`H H`) baseline, no GPU involved. No copy-engine axis (SDMA/BLIT only matters for GPU-side copies), so it's one line per affinity mode.
+
+```bash
+python osu_host_plot.py --modes INTRA_CCD INTER_CCD
 ```
 
 ### `rccl_sendrecv_plot.py`
