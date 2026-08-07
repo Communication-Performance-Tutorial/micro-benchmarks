@@ -36,10 +36,7 @@ micro-benchmarks/
 └── rocshmem/
     ├── build.sh                      ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
     ├── run.sh                        ← ping-pong latency + flood put/get bandwidth, 3 affinity modes
-    ├── run_wg_saturation.sh          ← WG-count (concurrency) sweep for WG Put/Get; SPX (INTER_SOCKET) or CPX (INTER_GCD)
-    ├── sbatch_test.sh                ← SLURM job: build once, then run run.sh
-    ├── sbatch_wg_saturation.sh       ← SLURM job (SPX): build once, then run the INTER_SOCKET sweep
-    └── sbatch_wg_saturation_cpx.sh   ← SLURM job (CPX): build once, then run the INTER_GCD sweep
+    └── sbatch_test.sh                ← SLURM job: build once, then run run.sh
 ```
 
 Each sub-directory is self-contained: `build.sh` fetches its own sources, and `sbatch_test.sh` runs both steps as a single SLURM job.
