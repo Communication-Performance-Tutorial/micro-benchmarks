@@ -12,7 +12,11 @@
 source /etc/profile 2>/dev/null
 source ~/.bashrc 2>/dev/null
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# SLURM runs batch scripts from a copy in its spool directory, so a
+# BASH_SOURCE-derived path would resolve there instead of the real repo
+# checkout; SLURM_SUBMIT_DIR (set by sbatch to the submission cwd) is the
+# reliable way to find the actual script directory when batch-scheduled.
+SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BINARY="$SCRIPT_DIR/build/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency"
 
 if [[ ! -x "$BINARY" ]]; then
