@@ -5,18 +5,18 @@
 #SBATCH --gres=gpu:4
 #SBATCH --partition=PPAC_MI300A_SPX
 #SBATCH --time=02:00:00
-#SBATCH --output=/shared/prerelease/home/amd_int/slockhar/CommTutorial/micro-benchmarks/bench_affinity_%j.log
+#SBATCH --output=bench_affinity_%j.log
 
 # Build anything not yet built, then run each suite's affinity sweep.
 # This script runs the SPX-mode benchmarks (partition PPAC_MI300A_SPX).
-# For RCCL CPX-mode results (INTER_CCD / INTER_SOCKET), submit separately:
+# For RCCL CPX-mode results (INTER_GCD), submit separately:
 #   sbatch rccl-tests/sbatch_cpx_sendrecv.sh
 #
 # Results land in:
 #   osu/results/          osu_latency_{INTRA_CCD,INTER_CCD,INTER_SOCKET}_{SDMA,BLIT}.dat
 #                         osu_bw_{INTRA_CCD,INTER_CCD,INTER_SOCKET}_{SDMA,BLIT}.dat
 #   rccl-tests/results/   sendrecv_INTER_SOCKET.dat
-#                         sendrecv_cpx_{INTER_CCD,INTER_SOCKET}.dat  ← CPX job
+#                         sendrecv_cpx_INTER_GCD.dat  ← CPX job
 #                         all_reduce.dat
 #   rocshmem/results/     pingpong_latency_{INTRA_CCD,INTER_CCD,INTER_SOCKET}.dat
 #                         put_bw_{INTRA_CCD,INTER_CCD,INTER_SOCKET}.dat
@@ -25,7 +25,7 @@
 source /etc/profile 2>/dev/null
 source ~/.bashrc 2>/dev/null
 
-MB=/shared/prerelease/home/amd_int/slockhar/CommTutorial/micro-benchmarks
+MB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "======================================================"
 echo "  Node:  $(hostname)"

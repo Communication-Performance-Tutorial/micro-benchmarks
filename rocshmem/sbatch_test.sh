@@ -7,12 +7,12 @@
 #SBATCH --nodelist=ppac-pl1-s24-30
 #SBATCH --partition=PPAC_MI300A_SPX
 #SBATCH --time=01:30:00
-#SBATCH --output=/shared/prerelease/home/amd_int/slockhar/CommTutorial/micro-benchmarks/rocshmem/test_%j.log
+#SBATCH --output=test_%j.log
 
 source /etc/profile 2>/dev/null
 source ~/.bashrc 2>/dev/null
 
-SCRIPT_DIR=/shared/prerelease/home/amd_int/slockhar/CommTutorial/micro-benchmarks/rocshmem
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINARY="${ROCSHMEM_INSTALL:-$HOME/rocshmem}/share/rocshmem/rocshmem_functional_tests"
 
 if [[ ! -x "$BINARY" ]]; then

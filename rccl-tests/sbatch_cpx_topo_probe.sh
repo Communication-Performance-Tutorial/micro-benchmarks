@@ -7,7 +7,7 @@
 #SBATCH --nodelist=ppac-pl1-s25-40
 #SBATCH --partition=PPAC_MI300A_CPX
 #SBATCH --time=00:15:00
-#SBATCH --output=/shared/prerelease/home/amd_int/slockhar/CommTutorial/micro-benchmarks/rccl-tests/cpx_topo_%j.log
+#SBATCH --output=cpx_topo_%j.log
 
 # Topology probe for ppac-pl1-s25-40 (CPX mode, 24 GPUs / 192 CPUs).
 # Goal: determine the correct CPU core → die/CCD mapping so that

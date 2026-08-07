@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=osu_bench
+#SBATCH --job-name=osu_host_bench
 #SBATCH --nodes=1
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=4
@@ -7,12 +7,16 @@
 #SBATCH --nodelist=ppac-pl1-s24-30
 #SBATCH --partition=PPAC_MI300A_SPX
 #SBATCH --time=00:30:00
-#SBATCH --output=test_%j.log
+#SBATCH --output=host_test_%j.log
 
 source /etc/profile 2>/dev/null
 source ~/.bashrc 2>/dev/null
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# SLURM runs batch scripts from a copy in its spool directory, so a
+# BASH_SOURCE-derived path would resolve there instead of the real repo
+# checkout; SLURM_SUBMIT_DIR (set by sbatch to the submission cwd) is the
+# reliable way to find the actual script directory when batch-scheduled.
+SCRIPT_DIR="${SLURM_SUBMIT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 BINARY="$SCRIPT_DIR/build/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency"
 
 if [[ ! -x "$BINARY" ]]; then
@@ -24,5 +28,5 @@ else
 fi
 
 echo ""
-echo "=== Run ==="
-bash "$SCRIPT_DIR/run.sh"
+echo "=== Run: CPU (host) buffer affinity sweep ==="
+bash "$SCRIPT_DIR/run_host.sh"
