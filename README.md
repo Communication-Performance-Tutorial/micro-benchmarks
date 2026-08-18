@@ -14,6 +14,8 @@ These benchmarks complement the application-level measurements in `CG-Tutorial/`
 | [`rccl-tests/`](rccl-tests/) | Send/recv latency & bandwidth; all-reduce throughput | RCCL (ROCm Collective Communications Library) |
 | [`rocshmem/`](rocshmem/) | One-sided put/get latency & bandwidth (intra-node) | rocSHMEM IPC backend |
 
+[`plotting-scripts/`](plotting-scripts/) contains Python utilities for visualizing the `.dat` output from all three suites above — see its [README](plotting-scripts/README.md) for details.
+
 ---
 
 ## Directory layout
@@ -33,10 +35,15 @@ micro-benchmarks/
 │   ├── build.sh            ← sparse-checkouts rccl-tests from ROCm/rocm-systems, builds
 │   ├── run.sh              ← sendrecv latency/bandwidth + all-reduce throughput, 3 affinity modes
 │   └── sbatch_test.sh      ← SLURM job: build once, then run
-└── rocshmem/
-    ├── build.sh                      ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
-    ├── run.sh                        ← ping-pong latency + flood put/get bandwidth, 3 affinity modes
-    └── sbatch_test.sh                ← SLURM job: build once, then run run.sh
+├── rocshmem/
+│   ├── build.sh                      ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
+│   ├── run.sh                        ← ping-pong latency + flood put/get bandwidth, 3 affinity modes
+│   └── sbatch_test.sh                ← SLURM job: build once, then run run.sh
+└── plotting-scripts/                 ← Python plotting utilities for all three suites' results/ output
+    ├── common_style.py                   ← shared styling + .dat file parsers
+    ├── osu_ccd_plot.py, osu_xcd_plot.py, osu_host_plot.py
+    ├── rccl_sendrecv_plot.py, rccl_allreduce_plot.py
+    └── rocshmem_plot.py
 ```
 
 Each sub-directory is self-contained: `build.sh` fetches its own sources, and `sbatch_test.sh` runs both steps as a single SLURM job.
