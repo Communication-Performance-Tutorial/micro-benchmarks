@@ -20,7 +20,8 @@ Tests 26 and 24 use a single work-group (single context) to give a **single-stre
 rocshmem/
 ├── build.sh          ← sparse-checkouts rocshmem from ROCm/rocm-systems, builds (IPC backend)
 ├── run.sh            ← runs ping-pong latency + flood put + WG get tests, 3 affinity modes
-└── sbatch_test.sh    ← SLURM job: build once if needed, then run run.sh
+├── sbatch_test.sh    ← SLURM job: build once if needed, then run run.sh
+└── sbatch_test_system_module.sh  ← SLURM job: load system rocshmem module, then run run.sh
 ```
 
 After a successful build, the installed binaries live at:
@@ -73,6 +74,12 @@ Or submit as a SLURM job (builds first if needed):
 
 ```bash
 sbatch sbatch_test.sh
+```
+
+To run with the system `rocshmem` module (without building in this directory):
+
+```bash
+sbatch sbatch_test_system_module.sh
 ```
 
 `run.sh` sweeps all three affinity modes, running all three tests (ping-pong, flood put, WG get) for each mode:
