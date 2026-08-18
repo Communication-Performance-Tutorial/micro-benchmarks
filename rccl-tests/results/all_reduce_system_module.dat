@@ -1,0 +1,28 @@
+# rccl-tests version 2.17.9-HEAD:0e7d4a3 rccl-headers=22707 rccl-library=22707
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 4 minBytes 4194304 maxBytes 1073741824 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid 144356 on ppac-pl1-s24-30 device  0 [0000:01:00] AMD Instinct MI300A
+#  Rank  1 Group  0 Pid 144356 on ppac-pl1-s24-30 device  1 [0001:01:00] AMD Instinct MI300A
+#  Rank  2 Group  0 Pid 144356 on ppac-pl1-s24-30 device  2 [0002:01:00] AMD Instinct MI300A
+#  Rank  3 Group  0 Pid 144356 on ppac-pl1-s24-30 device  3 [0003:01:00] AMD Instinct MI300A
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong  
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)          
+     4194304       1048576     float     sum      -1    51.16   81.98  122.96       0    53.47   78.44  117.65       0
+     8388608       2097152     float     sum      -1    77.39  108.39  162.58       0    78.90  106.32  159.49       0
+    16777216       4194304     float     sum      -1   126.97  132.14  198.21       0   132.77  126.37  189.55       0
+    33554432       8388608     float     sum      -1   226.98  147.83  221.74       0   232.88  144.08  216.12       0
+    67108864      16777216     float     sum      -1   429.08  156.40  234.61       0   432.46  155.18  232.77       0
+   134217728      33554432     float     sum      -1   832.36  161.25  241.87       0   835.53  160.64  240.96       0
+   268435456      67108864     float     sum      -1  1630.61  164.62  246.93       0  1644.43  163.24  244.86       0
+   536870912     134217728     float     sum      -1  3230.06  166.21  249.32       0  3223.73  166.54  249.81       0
+  1073741824     268435456     float     sum      -1  6420.72  167.23  250.85       0  6422.45  167.19  250.78       0
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 212.836 
+#
+# Collective test concluded: all_reduce_perf
+#
+

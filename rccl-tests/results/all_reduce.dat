@@ -1,30 +1,27 @@
-# rccl-tests version 2.18.3-develop:90992fca21+ rccl-headers=22707 rccl-library=22707
+# rccl-tests version 2.19.6-develop:dfd3f592c6+ rccl-headers=22707 rccl-library=22707
 # Collective test starting: all_reduce_perf
-# nThread 1 nGpus 7 minBytes 4194304 maxBytes 1073741824 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0 unalign: 0
+# nThread 1 nGpus 4 minBytes 4194304 maxBytes 1073741824 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0 unalign: 0
 #
 # Using devices
-#  Rank  0 Group  0 Pid 993774 on ppac-pl1-s25-40 device  0 [0000:01:00] AMD Instinct MI300A
-#  Rank  1 Group  0 Pid 993774 on ppac-pl1-s25-40 device  1 [0000:01:00] AMD Instinct MI300A
-#  Rank  2 Group  0 Pid 993774 on ppac-pl1-s25-40 device  2 [0000:01:00] AMD Instinct MI300A
-#  Rank  3 Group  0 Pid 993774 on ppac-pl1-s25-40 device  3 [0000:01:00] AMD Instinct MI300A
-#  Rank  4 Group  0 Pid 993774 on ppac-pl1-s25-40 device  4 [0000:01:00] AMD Instinct MI300A
-#  Rank  5 Group  0 Pid 993774 on ppac-pl1-s25-40 device  5 [0000:01:00] AMD Instinct MI300A
-#  Rank  6 Group  0 Pid 993774 on ppac-pl1-s25-40 device  6 [0001:01:00] AMD Instinct MI300A
+#  Rank  0 Group  0 Pid 154393 on ppac-pl1-s24-30 device  0 [0000:01:00] AMD Instinct MI300A
+#  Rank  1 Group  0 Pid 154393 on ppac-pl1-s24-30 device  1 [0001:01:00] AMD Instinct MI300A
+#  Rank  2 Group  0 Pid 154393 on ppac-pl1-s24-30 device  2 [0002:01:00] AMD Instinct MI300A
+#  Rank  3 Group  0 Pid 154393 on ppac-pl1-s24-30 device  3 [0003:01:00] AMD Instinct MI300A
 #
-#                                                              out-of-place                       in-place          
-#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong  
+#                                                                          out-of-place                           in-place
+#       size         count      type   redop    root     time   algbw   busbw  #wrong     time   algbw   busbw  #wrong 
 #        (B)    (elements)                               (us)  (GB/s)  (GB/s)             (us)  (GB/s)  (GB/s)          
-     4194304       1048576     float     sum      -1   160.03   26.21   44.93       0   157.46   26.64   45.66       0
-     8388608       2097152     float     sum      -1   268.47   31.25   53.56       0   269.82   31.09   53.30       0
-    16777216       4194304     float     sum      -1   478.76   35.04   60.07       0   482.64   34.76   59.59       0
-    33554432       8388608     float     sum      -1   912.41   36.78   63.04       0   914.30   36.70   62.91       0
-    67108864      16777216     float     sum      -1  1714.19   39.15   67.11       0  1713.44   39.17   67.14       0
-   134217728      33554432     float     sum      -1  3383.37   39.67   68.01       0  3379.92   39.71   68.07       0
-   268435456      67108864     float     sum      -1  6733.61   39.87   68.34       0  6731.59   39.88   68.36       0
-   536870912     134217728     float     sum      -1  13314.8   40.32   69.12       0  15769.0   34.05   58.36       0
-  1073741824     268435456     float     sum      -1  26601.5   40.36   69.20       0  26569.9   40.41   69.28       0
+     4194304       1048576     float     sum      -1    53.79   77.98  116.97       0    54.85   76.46  114.70       0
+     8388608       2097152     float     sum      -1    78.46  106.92  160.38       0    83.53  100.43  150.64       0
+    16777216       4194304     float     sum      -1   129.05  130.01  195.01       0   134.63  124.62  186.93       0
+    33554432       8388608     float     sum      -1   227.87  147.25  220.88       0   232.65  144.23  216.34       0
+    67108864      16777216     float     sum      -1   428.91  156.46  234.70       0   435.18  154.21  231.31       0
+   134217728      33554432     float     sum      -1   833.52  161.03  241.54       0   838.42  160.08  240.13       0
+   268435456      67108864     float     sum      -1  1636.24  164.06  246.08       0  1643.31  163.35  245.03       0
+   536870912     134217728     float     sum      -1  3227.81  166.33  249.49       0  3238.07  165.80  248.70       0
+  1073741824     268435456     float     sum      -1  6435.63  166.84  250.26       0  6451.11  166.44  249.66       0
 # Out of bounds values : 0 OK
-# Avg bus bandwidth    : 62.0042 
+# Avg bus bandwidth    : 211.042 
 #
 # Collective test concluded: all_reduce_perf
 #

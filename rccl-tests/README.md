@@ -17,10 +17,11 @@ Together these answer: *how fast can RCCL move data between GPUs*, complementing
 
 ```
 rccl-tests/
-├── build.sh                    ← sparse-checkouts rccl-tests from ROCm/rocm-systems, patches, builds
-├── run.sh                      ← runs sendrecv_perf (INTER_SOCKET only) + all_reduce_perf
-├── sbatch_test.sh              ← SLURM job: build once if needed, then run
-└── ../set_affinity_mi300a.sh   ← shared per-rank CPU/GPU affinity wrapper
+├── build.sh                     ← sparse-checkouts rccl-tests from ROCm/rocm-systems, patches, builds
+├── run.sh                       ← runs sendrecv_perf (INTER_SOCKET only) + all_reduce_perf
+├── sbatch_test.sh               ← SLURM job: build once if needed, then run
+├── sbatch_test_system_module.sh ← SLURM job: load system rccl-tests module and run
+└── ../set_affinity_mi300a.sh    ← shared per-rank CPU/GPU affinity wrapper
 ```
 
 After a successful build, binaries live at:
@@ -66,6 +67,12 @@ Or submit as a SLURM job (builds first if needed):
 
 ```bash
 sbatch sbatch_test.sh
+```
+
+To run against the system-installed `rccl-tests` module instead of local build artifacts:
+
+```bash
+sbatch sbatch_test_system_module.sh
 ```
 
 `run.sh` runs `sendrecv_perf` under the `INTER_SOCKET` affinity mode, then runs
