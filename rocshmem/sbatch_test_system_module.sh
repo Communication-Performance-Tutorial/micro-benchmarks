@@ -55,30 +55,19 @@ fi
 
 ROCSHMEM_DIR="$MB_ROOT/rocshmem"
 
-# Prefer the module's canonical install layout, but fall back to PATH/bin.
-if [[ -n "${ROCSHMEM_PATH:-}" && -x "$ROCSHMEM_PATH/share/rocshmem/rocshmem_functional_tests" ]]; then
-    TESTS_BIN="$ROCSHMEM_PATH/share/rocshmem/rocshmem_functional_tests"
-elif [[ -n "${ROCSHMEM_PATH:-}" && -x "$ROCSHMEM_PATH/bin/rocshmem_functional_tests" ]]; then
-    TESTS_BIN="$ROCSHMEM_PATH/bin/rocshmem_functional_tests"
-else
-    TESTS_BIN="$(command -v rocshmem_functional_tests || true)"
-fi
+# Use the installed functional tests binary (local build/install prefix).
+TESTS_PREFIX="${ROCSHMEM_INSTALL:-$HOME/rocshmem}"
+TESTS_BIN="$TESTS_PREFIX/bin/rocshmem_functional_tests"
 
 if [[ -z "${TESTS_BIN:-}" || ! -x "$TESTS_BIN" ]]; then
-    echo "ERROR: rocshmem_functional_tests not found in the loaded rocshmem module."
-    echo "Checked ROCSHMEM_PATH and PATH after 'module load rocshmem'."
+    echo "ERROR: rocshmem_functional_tests not found at: $TESTS_BIN"
+    echo "Set ROCSHMEM_INSTALL to the rocshmem install prefix containing bin/rocshmem_functional_tests."
     exit 1
 fi
 
 echo "Using rocSHMEM module path: ${ROCSHMEM_PATH:-unknown}"
 echo "Using test binary: $TESTS_BIN"
 
-# run.sh expects ${ROCSHMEM_INSTALL}/share/rocshmem/rocshmem_functional_tests.
-# Create a local shim install prefix that points to the module-provided binary.
-SHIM_INSTALL="$ROCSHMEM_DIR/.rocshmem_module_install"
-mkdir -p "$SHIM_INSTALL/share/rocshmem"
-ln -sf "$TESTS_BIN" "$SHIM_INSTALL/share/rocshmem/rocshmem_functional_tests"
-
 echo ""
 echo "=== Run (system rocshmem module) ==="
-ROCSHMEM_INSTALL="$SHIM_INSTALL" bash "$ROCSHMEM_DIR/run.sh"
+ROCSHMEM_INSTALL="$TESTS_PREFIX" bash "$ROCSHMEM_DIR/run.sh"
