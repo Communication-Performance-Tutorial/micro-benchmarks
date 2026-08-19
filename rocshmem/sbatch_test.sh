@@ -43,7 +43,7 @@ if [[ -z "$MB_ROOT" ]]; then
 fi
 
 ROCSHMEM_DIR="$MB_ROOT/rocshmem"
-BINARY="${ROCSHMEM_INSTALL:-$HOME/rocshmem}/share/rocshmem/rocshmem_functional_tests"
+BINARY="${ROCSHMEM_INSTALL:-$HOME/rocshmem}/bin/rocshmem_functional_tests"
 
 if [[ ! -x "$BINARY" ]]; then
     echo "=== Build (first run: ~20 min) ==="

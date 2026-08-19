@@ -27,8 +27,8 @@ rocshmem/
 After a successful build, the installed binaries live at:
 
 ```
-~/rocshmem/share/rocshmem/
-├── rocshmem_functional_tests   ← used by run.sh
+~/rocshmem/bin/
+├── rocshmem_functional_tests   ← used by sbatch scripts
 └── rocshmem_unit_tests
 ```
 

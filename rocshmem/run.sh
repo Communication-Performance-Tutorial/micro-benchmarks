@@ -38,7 +38,7 @@
 set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-TESTS="${ROCSHMEM_INSTALL:-$HOME/rocshmem}/share/rocshmem/rocshmem_functional_tests"
+TESTS="${ROCSHMEM_INSTALL:-$HOME/rocshmem}/bin/rocshmem_functional_tests"
 RESULTS="$SCRIPT_DIR/results"
 
 module load rocm openmpi
