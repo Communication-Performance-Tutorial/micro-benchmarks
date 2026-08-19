@@ -67,7 +67,7 @@ Output is written to `<suite>/test_<jobid>.log`.
 squeue -u $USER
 
 # View results as they stream in
-tail -f osu/test_<jobid>.log
+tail -f test_<jobid>.log
 ```
 
 ---
