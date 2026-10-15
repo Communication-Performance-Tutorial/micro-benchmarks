@@ -11,7 +11,7 @@
 #
 #   CPX mode (CPX_MODE=1):
 #     Node presents 24 GPUs (6 per physical die, 2 per CCD).  All three affinity
-#     modes can be tested by selecting GPU pairs with ROCR_VISIBLE_DEVICES:
+#     modes can be tested by selecting GPU pairs with HIP_VISIBLE_DEVICES:
 #       INTRA_CCD    — skipped (same CCD/HBM, no Infinity Fabric path)
 #       INTER_XCD    — local indices 0,2  (diff CCD, same die/package)  ← collected
 #       INTER_SOCKET — skipped (cross-die already covered by SPX sendrecv_INTER_SOCKET.dat)
@@ -22,7 +22,7 @@
 #     MI300A package, as distinct from INTER_SOCKET which crosses packages.
 #
 #     CPU pinning is not used in CPX mode: RCCL bandwidth on MI300A depends
-#     only on which GPU pair is selected (via ROCR_VISIBLE_DEVICES), not on
+#     only on which GPU pair is selected (via HIP_VISIBLE_DEVICES), not on
 #     CPU core placement.  This avoids cpuset issues on mixed allocations.
 #
 #     Usage (mixed allocation, no --exclusive needed):
@@ -47,7 +47,7 @@ MPIRUN="mpirun -n 2 -mca pml ucx --bind-to none"
 
 if [ -n "${CPX_MODE}" ]; then
     # ── CPX mode ─────────────────────────────────────────────────────────────
-    # SLURM remaps allocated GPUs to local indices 0..N-1 via ROCR_VISIBLE_DEVICES.
+    # SLURM remaps allocated GPUs to local indices 0..N-1 via HIP_VISIBLE_DEVICES.
     # With 7 GPUs requested: indices 0-5 = die 1 (NUMA 1), index 6 = die 2 (NUMA 2).
     # Each die has 3 CCDs; 2 virtual GPUs per CCD, so adjacent even/odd indices
     # share a CCD (0,1 → CCD0; 2,3 → CCD1; 4,5 → CCD2).
@@ -68,13 +68,13 @@ if [ -n "${CPX_MODE}" ]; then
     # CPX mode adds only the INTER_XCD data point (same package, different XCD).
     #
     # CPU pinning is omitted: RCCL bandwidth on MI300A is determined entirely by
-    # ROCR_VISIBLE_DEVICES (which GPU pair each rank uses), not by which CPU core
+    # HIP_VISIBLE_DEVICES (which GPU pair each rank uses), not by which CPU core
     # the rank runs on.  Skipping taskset avoids cpuset issues on mixed allocations.
     for MODE in INTER_XCD; do
         echo "======================================================"
         echo "  CPX Affinity: ${MODE} — Send/Recv (1B–1G)"
         echo "======================================================"
-        ROCR_VISIBLE_DEVICES=${CPX_GPUS[$MODE]} \
+        HIP_VISIBLE_DEVICES=${CPX_GPUS[$MODE]} \
         ${MPIRUN} "${BUILD}/sendrecv_perf" -b 1 -e 1G -f 2 -g 1 \
             | tee "${RESULTS}/sendrecv_cpx_${MODE}.dat"
         echo ""
@@ -86,7 +86,7 @@ else
     echo "  Affinity: INTER_SOCKET — Send/Recv (1B–1G, 2 GPUs)"
     echo "======================================================"
     # sendrecv_perf validates that (nGpus × nRanks) GPUs are visible from rank 0,
-    # so ROCR_VISIBLE_DEVICES must NOT restrict visibility here.  CPU-only pinning
+    # so HIP_VISIBLE_DEVICES must NOT restrict visibility here.  CPU-only pinning
     # via taskset places rank 0 on die-0 cores and rank 1 on die-1 cores; RCCL
     # naturally assigns rank N → GPU N.
     # CPU pinning (core 0 for rank 0, core 24 for rank 1) improves NUMA locality

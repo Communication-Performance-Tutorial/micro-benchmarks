@@ -130,7 +130,7 @@ Results are saved to `results/pingpong_latency_<MODE>.dat`, `results/put_bw_<MOD
 > assign both ranks to the same GPU, nor to two XCDs on the *same* package, using
 > this test binary in SPX mode; that would require CPX-mode partitioning.
 >
-> **Do not set `ROCR_VISIBLE_DEVICES`** when running these tests.  Restricting
+> **Do not set `HIP_VISIBLE_DEVICES`** when running these tests.  Restricting
 > visibility to a single device causes `hipSetDevice(1)` in rank 1 to fail with
 > `invalid device ordinal`.
 

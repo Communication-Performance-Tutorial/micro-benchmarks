@@ -30,7 +30,7 @@
 # GPU assignment is NOT controlled here. The test driver calls
 # hipSetDevice(OMPI_COMM_WORLD_LOCAL_RANK) directly, so rank 0 always uses
 # GPU 0 and rank 1 always uses GPU 1 in all three modes.
-# Setting ROCR_VISIBLE_DEVICES would cause hipSetDevice(1) to fail for rank 1;
+# Setting HIP_VISIBLE_DEVICES would cause hipSetDevice(1) to fail for rank 1;
 # only taskset is used for topology isolation.
 #
 # Requires: build.sh completed successfully.

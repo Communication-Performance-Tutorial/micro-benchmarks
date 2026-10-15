@@ -15,11 +15,11 @@
 #     INTER_SOCKET is genuinely cross-package.
 #
 #   CPX mode (CPX_MODE=1, requires a PPAC_MI300A_CPX allocation):
-#     ROCR_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different XCD
+#     HIP_VISIBLE_DEVICES=0,2 restricts rank 0 / rank 1 to two different XCD
 #     partitions on the SAME physical die — genuine INTER_XCD traffic
 #     (same package, different XCD), matching ../rccl-tests/run.sh's CPX mapping.
 #     No CPU pinning is applied: GPU bandwidth here is governed entirely by
-#     ROCR_VISIBLE_DEVICES, and skipping taskset avoids cpuset issues on shared
+#     HIP_VISIBLE_DEVICES, and skipping taskset avoids cpuset issues on shared
 #     CPX allocations.
 #
 # ── Naming: INTRA_XCD / INTER_XCD / INTER_SOCKET ────────────────────────────
@@ -62,12 +62,12 @@ if [ -n "${CPX_MODE}" ]; then
         echo "======================================================"
 
         echo "--- OSU Latency (GPU buffers) ---"
-        eval "HSA_ENABLE_SDMA=${sdma_val} ROCR_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_latency\" D D" \
+        eval "HSA_ENABLE_SDMA=${sdma_val} HIP_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_latency\" D D" \
             | tee "${RESULTS}/osu_latency_INTER_XCD_${engine}.dat"
 
         echo ""
         echo "--- OSU Bandwidth (GPU buffers, up to 1 GiB) ---"
-        eval "HSA_ENABLE_SDMA=${sdma_val} ROCR_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_bw\" -m $((1024*1024*1024)) D D" \
+        eval "HSA_ENABLE_SDMA=${sdma_val} HIP_VISIBLE_DEVICES=0,2 ${MPIRUN} \"${BIN}/osu_bw\" -m $((1024*1024*1024)) D D" \
             | tee "${RESULTS}/osu_bw_INTER_XCD_${engine}.dat"
 
         echo ""

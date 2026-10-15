@@ -32,5 +32,5 @@ done
 echo "# osu_latency: rank 0 -> core $core1 and gpu $gpu1, rank 1 -> core $core2 and gpu $gpu2"
 
 mpirun -mca pml ucx --bind-to none \
-    -np 1 env ROCR_VISIBLE_DEVICES="$gpu1" taskset -c "$core1" "$OSU_BANDWIDTH" "$@" D D : \
-    -np 1 env ROCR_VISIBLE_DEVICES="$gpu2" taskset -c "$core2" "$OSU_BANDWIDTH" "$@" D D
+    -np 1 env HIP_VISIBLE_DEVICES="$gpu1" taskset -c "$core1" "$OSU_BANDWIDTH" "$@" D D : \
+    -np 1 env HIP_VISIBLE_DEVICES="$gpu2" taskset -c "$core2" "$OSU_BANDWIDTH" "$@" D D

@@ -13,7 +13,7 @@
 #
 # There is no copy-engine (SDMA/BLIT) axis here: that toggle only affects GPU-side
 # memory copies. Host buffers are moved by the CPU / UCX's shared-memory (or CMA)
-# transport, which set_affinity_mi300a.sh's ROCR_VISIBLE_DEVICES restriction does
+# transport, which set_affinity_mi300a.sh's HIP_VISIBLE_DEVICES restriction does
 # not affect (harmless no-op for a program that never calls into the GPU runtime).
 #
 # Result files: osu_latency_H_<mode>.dat, osu_bw_H_<mode>.dat  (up to 3 files each --

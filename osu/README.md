@@ -99,13 +99,13 @@ sbatch sbatch_cpx_test.sh   # CPX: INTER_XCD
 
 ### Naming: INTRA_XCD / INTER_XCD / INTER_SOCKET
 
-A physical MI300A package contains 6 XCDs, grouped in pairs under 3 CCDs; a node has 4 such packages.  `set_affinity_mi300a.sh`'s `INTRA_CCD`/`INTER_CCD` env vars only ever change **CPU** pinning — both route both ranks to **GPU 0** (the same XCD), so at the GPU level they are both `INTRA_XCD`.  Getting a genuine `INTER_XCD` data point (crossing XCDs while staying on the *same* package) requires CPX-mode `ROCR_VISIBLE_DEVICES` partitioning, which is not possible in SPX mode at all — this is why `run.sh` needs a `CPX_MODE` switch, mirroring `../rccl-tests/run.sh`.
+A physical MI300A package contains 6 XCDs, grouped in pairs under 3 CCDs; a node has 4 such packages.  `set_affinity_mi300a.sh`'s `INTRA_CCD`/`INTER_CCD` env vars only ever change **CPU** pinning — both route both ranks to **GPU 0** (the same XCD), so at the GPU level they are both `INTRA_XCD`.  Getting a genuine `INTER_XCD` data point (crossing XCDs while staying on the *same* package) requires CPX-mode `HIP_VISIBLE_DEVICES` partitioning, which is not possible in SPX mode at all — this is why `run.sh` needs a `CPX_MODE` switch, mirroring `../rccl-tests/run.sh`.
 
 | GPU-level category | CPU sub-mode | CPU layout | GPU layout |
 |---|---|---|---|
 | `INTRA_XCD` | `INTRA_CCD` | Both ranks on the same 8-core CCD (shared L3) | Both ranks → GPU 0 |
 | `INTRA_XCD` | `INTER_CCD` | Ranks on different CCDs of the same package (separate L3 domains) | Both ranks → GPU 0 |
-| `INTER_XCD` *(CPX only)* | — (no CPU pinning) | `ROCR_VISIBLE_DEVICES=0,2` | Two XCDs, **same** package (different CCDs, same die) |
+| `INTER_XCD` *(CPX only)* | — (no CPU pinning) | `HIP_VISIBLE_DEVICES=0,2` | Two XCDs, **same** package (different CCDs, same die) |
 | `INTER_SOCKET` | `INTER_SOCKET` | Ranks on different MI300A packages (different NUMA nodes) | Rank 0 → GPU 0, Rank 1 → GPU 1 (different packages) |
 
 ### Affinity sweep

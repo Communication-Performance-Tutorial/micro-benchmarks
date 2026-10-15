@@ -98,13 +98,13 @@ sbatch sbatch_test_system_module.sh
 
 | Affinity mode | SPX support | Notes |
 |---|---|---|
-| `INTRA_XCD` | **Not supported** | Both ranks map to the same `ROCR_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
+| `INTRA_XCD` | **Not supported** | Both ranks map to the same `HIP_VISIBLE_DEVICES=0`; RCCL finds only 1 GPU and aborts |
 | `INTER_XCD` | **Not supported** | Same reason |
 | `INTER_SOCKET` | **Supported** | Rank 0 → GPU 0, Rank 1 → GPU 1 (different physical dies/packages) |
 
 #### CPX mode — partition `PPAC_MI300A_CPX` (24 GPUs per node)
 
-In CPX mode the physical MI300A presents **24 virtual GPU devices** — 6 per die (2 per CCD), each with 38 compute units (1/6 of a full XCD).  SLURM remaps the allocated GPU set to local indices 0…N-1 via `ROCR_VISIBLE_DEVICES`.
+In CPX mode the physical MI300A presents **24 virtual GPU devices** — 6 per die (2 per CCD), each with 38 compute units (1/6 of a full XCD).  SLURM remaps the allocated GPU set to local indices 0…N-1 via `HIP_VISIBLE_DEVICES`.
 
 GPU index layout within a single-node CPX allocation:
 
@@ -120,9 +120,9 @@ Die 2 (NUMA 2, cores 48-71)  — only reachable with ≥ 7 GPUs allocated:
 
 | Affinity mode | GPU selection | Min GPUs to request | Collected |
 |---|---|---|---|
-| `INTRA_CCD` | `ROCR_VISIBLE_DEVICES=0,1` | 2 | **No — see note** |
-| `INTER_XCD` | `ROCR_VISIBLE_DEVICES=0,2` | 3 | Yes |
-| `INTER_SOCKET` | `ROCR_VISIBLE_DEVICES=0,6` | 7 | **No** — cross-die bandwidth already measured in SPX mode (`sendrecv_INTER_SOCKET.dat`) |
+| `INTRA_CCD` | `HIP_VISIBLE_DEVICES=0,1` | 2 | **No — see note** |
+| `INTER_XCD` | `HIP_VISIBLE_DEVICES=0,2` | 3 | Yes |
+| `INTER_SOCKET` | `HIP_VISIBLE_DEVICES=0,6` | 7 | **No** — cross-die bandwidth already measured in SPX mode (`sendrecv_INTER_SOCKET.dat`) |
 
 > **Naming: INTER_XCD vs INTER_SOCKET vs INTER_CCD.**
 > A physical MI300A package has 6 XCDs, grouped in pairs under 3 CCDs;
