@@ -12,7 +12,7 @@ OSU_URL="https://mvapich.cse.ohio-state.edu/download/mvapich/osu-micro-benchmark
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 SRC="$SCRIPT_DIR/src"
 
-module load rocm openmpi
+#module load rocm openmpi
 
 if [[ ! -d "$SRC" ]]; then
     TARBALL="$SCRIPT_DIR/osu-micro-benchmarks-${OSU_VERSION}.tar.gz"
