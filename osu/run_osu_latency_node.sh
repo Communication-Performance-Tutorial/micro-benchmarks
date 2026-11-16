@@ -20,7 +20,7 @@ fi
 for (( k = 0; k < num_msgs; k++ )); do
     c1=$(( k ))
     c2=$(( k + 42 ))
-    mpirun -mca pml ucx --bind-to none \
+    mpirun -mca pml ob1 --bind-to none \
         -np 1 taskset -c "$c1" "$OSU_LATENCY" "$@" : \
         -np 1 taskset -c "$c2" "$OSU_LATENCY" "$@" &	
 done

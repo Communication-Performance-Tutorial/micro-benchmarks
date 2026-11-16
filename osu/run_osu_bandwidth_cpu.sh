@@ -26,7 +26,7 @@ done
 
 echo "# osu_latency: rank 0 -> core $core1, rank 1 -> core $core2"
 
-mpirun -n 2 -mca pml ucx --bind-to none \
+mpirun -mca pml ob1 --bind-to none \
     -np 1 taskset -c "$core1" "$OSU_BANDWIDTH" "$@" : \
     -np 1 taskset -c "$core2" "$OSU_BANDWIDTH" "$@"
 

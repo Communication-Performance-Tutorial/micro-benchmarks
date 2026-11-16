@@ -29,7 +29,7 @@ module load rocm openmpi
 mkdir -p "$RESULTS"
 
 # --bind-to none: let set_affinity_mi300a.sh own all CPU pinning via taskset
-MPIRUN="mpirun -n 2 -mca pml ucx --bind-to none"
+MPIRUN="mpirun -n 2 -mca pml ob1 --bind-to none"
 
 # INTER_SOCKET needs a second GPU die/package to pin the two ranks to (one per
 # socket); on a single-GPU-die node there is no second socket to cross, so
